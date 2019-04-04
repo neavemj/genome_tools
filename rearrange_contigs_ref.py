@@ -6,9 +6,6 @@
 import sys, os
 import argparse
 import subprocess
-import genomeview
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 import glob
 
@@ -90,10 +87,16 @@ for genome in args.genomes:
         new_genome = open(args.arranged_contigs[0], "w")
         genome_name = genome.split(".")[0]
         new_genome.write(">" + genome_name + "_contigs_arranged" + "\n")
-        for contig in tiling_output.split("\n"):
+        contig_number = 0
+        contig_list = tiling_output.split("\n")
+        # remove empty lines
+        contig_list = list(filter(None, contig_list))
+        used_contigs = len(contig_list)
+        for contig in contig_list:
             contig = contig.strip().split("\t")
             if len(contig) < 7:
                 continue
+            contig_number += 1
             contig_name = contig[7]
             strand = contig[6]
             if strand == "+":
@@ -101,6 +104,10 @@ for genome in args.genomes:
             if strand == "-":
                 rev_comp = genome_dict[contig_name].reverse_complement()
                 new_genome.write(str(rev_comp))
+            # only put Ns between joined contigs - not at the end
+            print(contig_number, used_contigs)
+            if contig_number < used_contigs - 1:
+                new_genome.write("NNNNNNNNNN")
 
 
     # b'>AF369029.2 292967 bases\n-195054\t74406\t2360\t269461\t98.19\t99.63\t+\tscaffold_0\n76767\t83037\t14875\t6271
